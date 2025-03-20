@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: leslie-ai-agent
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: 16
+      - key: NODE_ENV
+        value: production
+      - key: TWITTER_API_KEY
+        sync: false
+      - key: TWITTER_API_KEY_SECRET
+        sync: false
+      - key: TWITTER_ACCESS_TOKEN
+        sync: false
+      - key: TWITTER_ACCESS_TOKEN_SECRET
+        sync: false
