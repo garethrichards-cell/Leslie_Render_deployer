@@ -28,13 +28,48 @@ const logger = winston.createLogger({
 // Load Leslie's character configuration
 const leslieCharacter = require('./leslie_character.json');
 
-// Twitter API client
-const twitterClient = new TwitterApi({
-  appKey: process.env.TWITTER_API_KEY,
-  appSecret: process.env.TWITTER_API_KEY_SECRET,
-  accessToken: process.env.TWITTER_ACCESS_TOKEN,
-  accessSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET
-});
+// Twitter API client - with better error handling
+let twitterClient;
+try {
+  // Log the credentials (partially) for debugging
+  console.log("Twitter API Key (first 4 chars):", process.env.TWITTER_API_KEY ? process.env.TWITTER_API_KEY.substring(0, 4) + "..." : "undefined");
+  console.log("Twitter API Key Secret (first 4 chars):", process.env.TWITTER_API_KEY_SECRET ? process.env.TWITTER_API_KEY_SECRET.substring(0, 4) + "..." : "undefined");
+  console.log("Twitter Access Token (first 4 chars):", process.env.TWITTER_ACCESS_TOKEN ? process.env.TWITTER_ACCESS_TOKEN.substring(0, 4) + "..." : "undefined");
+  console.log("Twitter Access Token Secret (first 4 chars):", process.env.TWITTER_ACCESS_TOKEN_SECRET ? process.env.TWITTER_ACCESS_TOKEN_SECRET.substring(0, 4) + "..." : "undefined");
+  
+  twitterClient = new TwitterApi({
+    appKey: process.env.TWITTER_API_KEY,
+    appSecret: process.env.TWITTER_API_KEY_SECRET,
+    accessToken: process.env.TWITTER_ACCESS_TOKEN,
+    accessSecret: process.env.TWITTER_ACCESS_TOKEN_SECRET
+  });
+  
+  logger.info("Twitter client initialized successfully");
+} catch (error) {
+  logger.error(`Error initializing Twitter client: ${error.message}`);
+  // Create a dummy client that logs instead of posting
+  twitterClient = {
+    v2: {
+      tweet: (content) => {
+        logger.info(`[DUMMY] Would tweet: ${content}`);
+        return { data: { id: "dummy-id", text: content } };
+      },
+      reply: (content, replyToId) => {
+        logger.info(`[DUMMY] Would reply to ${replyToId}: ${content}`);
+        return { data: { id: "dummy-id", text: content } };
+      },
+      userMentionTimeline: () => {
+        logger.info(`[DUMMY] Would check mentions`);
+        return { data: { data: [] } };
+      },
+      me: () => {
+        logger.info(`[DUMMY] Would get user profile`);
+        return { data: { id: "dummy-id", name: "Leslie" } };
+      }
+    }
+  };
+}
+
 
 // Track posted content to avoid duplicates
 let postedContent = [];
